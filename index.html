@@ -49,7 +49,6 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            margin: 0; 
             transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             opacity: 0.6; 
             z-index: 10;
@@ -118,6 +117,8 @@
             transition: background-color 0.3s, opacity 0.3s;
             opacity: 0; /* مخفية افتراضياً */
             pointer-events: none; /* غير تفاعلية */
+            border: none;
+            cursor: pointer;
         }
 
         /* إظهار وتفعيل الأزرار فقط في البطاقة النشطة */
@@ -161,11 +162,9 @@
 </head>
 <body>
 
-    <div class="main-carousel-area">
-
-        <div class="carousel-wrapper">
-            <div id="carousel-track">
-                </div>
+    <div class="main-carousel-area relative"> <div class="carousel-wrapper">
+            <div id="carousel-track" class="space-x-8"> 
+            </div>
         </div>
         </div>
 
@@ -175,11 +174,14 @@
             { name: "MILK CAKE", description: "DELICIOUS FROZEN INDIAN DESSERT", image: "https://placehold.co/200x200/F97316/FFFFFF?text=Product+2" },
             { name: "PAIN DE LAIT", description: "GOUT INDIEN AUTHENTIQUE", image: "https://placehold.co/200x200/EAB308/FFFFFF?text=Product+3" },
             { name: "VEGGIE BURGER", description: "HOME-STYLE FROZEN VEGGIE BURGERS", image: "https://placehold.co/200x200/10B981/FFFFFF?text=Product+4" },
+            { name: "RAS MALAI", description: "INDIAN COTTAGE CHEESE IN SWEETENED MILK", image: "https://placehold.co/200x200/9333ea/FFFFFF?text=Product+5" },
         ];
 
         let currentIndex = 0;
         const track = document.getElementById('carousel-track');
         const cardWidth = 320; 
+        const wrapperWidth = 960; // عرض carousel-wrapper
+        const marginBetweenCards = 32; // المسافة بين كل بطاقة (space-x-8 في Tailwind)
         
         /**
          * دالة لإنشاء بطاقة المنتج
@@ -219,7 +221,8 @@
             const prevBtn = document.createElement('button');
             prevBtn.className = 'nav-button button-left';
             prevBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6 transform rotate-180"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>';
-            // *** الإصلاح هنا: ربط الزر بالدالة ***
+            
+            // ربط الزر بدالة prevProduct
             prevBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 prevProduct();
@@ -229,7 +232,8 @@
             const nextBtn = document.createElement('button');
             nextBtn.className = 'nav-button button-right';
             nextBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>';
-            // *** الإصلاح هنا: ربط الزر بالدالة ***
+            
+            // ربط الزر بدالة nextProduct
             nextBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 nextProduct();
@@ -243,9 +247,14 @@
          * دالة لتحديث حالة العرض (التحريك، التكبير، الهالة)
          */
         function updateCarousel() {
-            // 1. حساب قيمة التحريك 
-            const offset = currentIndex * cardWidth; 
-            track.style.transform = `translateX(-${offset}px)`;
+            // 1. حساب قيمة التحريك (الإصلاح الرئيسي)
+            // لحساب الإزاحة لتوسيط البطاقة النشطة:
+            const centerOffset = (wrapperWidth / 2) - (cardWidth / 2);
+            // الإزاحة الكلية: (حجم البطاقة + الهامش) * المؤشر الحالي - إزاحة التوسيط
+            const totalOffset = (currentIndex * (cardWidth + marginBetweenCards)) - centerOffset; 
+
+            // تطبيق التحريك. يجب التأكد من عدم تجاوز الحد الأقصى للإزاحة لليمين
+            track.style.transform = `translateX(${-totalOffset}px)`;
 
             // 2. تحديث فئات النشاط (Active Class)
             const cards = track.querySelectorAll('.product-card');
@@ -256,7 +265,7 @@
                 }
             });
 
-            // 3. التحكم في ظهور الأزرار
+            // 3. التحكم في ظهور الأزرار (تعتيم الأزرار عند الأطراف)
             cards.forEach((card, index) => {
                 const prevButton = card.querySelector('.button-left');
                 const nextButton = card.querySelector('.button-right');
@@ -326,13 +335,3 @@
 
 </body>
 </html>
-```eof
-
-**ماذا فعلت لإصلاح المشكلة؟**
-
-قمت بمراجعة دالة `createProductCard` وتأكدت من أن أزرار `prevBtn` و `nextBtn` يتم ربطها مباشرة بدالتي `prevProduct()` و `nextProduct()` داخل JavaScript.
-
-**الرجاء الآن الضغط على `Preview`:**
-
-* يجب أن تجد الأسهم الآن **في مكانها الصحيح** (أسفل المنتج النشط).
-* يجب أن تعمل الأزرار الآن وتقلب المنتجات بسلاسة مع حركة المربع والدوران البرتقالي.
