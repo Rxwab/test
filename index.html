@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معرض المنتجات - الشكل والأزرار النهائية (الإصلاح)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* إعدادات الجسم والخط */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 1. تعريف أنيميشن الدوران للخلفية */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* حاوية المنتجات - الآن ستتحرك بالكامل */
+        #carousel-track {
+            display: flex;
+            /* حركة زنبركية (Springy) لتأكيد التحريك */
+            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); 
+        }
+        
+        .carousel-wrapper {
+            overflow: hidden; 
+            /* عرض 3 بطاقات (320px * 3 = 960px) */
+            width: 960px; 
+        }
+
+        /* إعداد بطاقة المنتج */
+        .product-card {
+            min-width: 320px;
+            height: 400px;
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative; /* مهم لوضع الأزرار داخلها */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0; 
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 0.6; 
+            z-index: 10;
+        }
+
+        /* تأثير التكبير للمنتج النشط */
+        .product-card.active {
+            transform: scale(1.15); 
+            opacity: 1; 
+            z-index: 20;
+        }
+
+        /* حاوية الخلفية المتحركة */
+        .halo-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 380px; 
+            height: 380px;
+            transform: translate(-50%, -50%);
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none;
+        }
+
+        /* عنصر الهالة الدوارة (الشكل البرتقالي المتموج) */
+        .halo {
+            width: 100%;
+            height: 100%;
+            background-color: #FF8C00;
+            
+            /* تطبيق شكل "البتلات المتموجة" */
+            clip-path: polygon(
+                50% 0%, 80% 10%, 100% 40%, 90% 70%, 70% 90%, 50% 100%, 30% 90%, 10% 70%, 0% 40%, 20% 10%
+            );
+            
+            filter: blur(15px); 
+            animation: spin 7s linear infinite; /* دوران واضح ومستمر */
+        }
+
+        /* إظهار الهالة فقط داخل المنتج النشط */
+        .product-card.active .halo-container {
+            opacity: 1;
+        }
+
+        /* وضع صورة المنتج فوق الخلفية */
+        .product-image {
+            width: 200px;
+            height: 200px;
+            position: relative;
+            z-index: 25;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        }
+
+        /* الأزرار (موقعها داخل البطاقة النشطة) */
+        .nav-button {
+            position: absolute;
+            bottom: 30px; /* المسافة من أسفل البطاقة */
+            z-index: 30; 
+            padding: 10px;
+            background-color: #333; /* لون أسود */
+            color: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            transition: background-color 0.3s, opacity 0.3s;
+            opacity: 0; /* مخفية افتراضياً */
+            pointer-events: none; /* غير تفاعلية */
+        }
+
+        /* إظهار وتفعيل الأزرار فقط في البطاقة النشطة */
+        .product-card.active .nav-button {
+            opacity: 1; 
+            pointer-events: auto; 
+        }
+        
+        .button-left {
+            left: 20px; /* مسافة من يسار البطاقة */
+        }
+        .button-right {
+            right: 20px; /* مسافة من يمين البطاقة */
+        }
+
+        /* النقط الدالة على عدد المنتجات */
+        .dots-container {
+            position: absolute;
+            bottom: -50px; 
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 25;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background-color: #ccc;
+            border-radius: 50%;
+            transition: background-color 0.3s, transform 0.3s;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background-color: #333;
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-carousel-area">
+
+        <div class="carousel-wrapper">
+            <div id="carousel-track">
+                </div>
+        </div>
+        </div>
+
+    <script>
+        const products = [
+            { name: "MAKHANI (500G)", description: "WHIPPED BUTTER / BEURRE FOUETTÉ. KEEP REFRIGERATED", image: "https://placehold.co/200x200/4F46E5/FFFFFF?text=Product+1" },
+            { name: "MILK CAKE", description: "DELICIOUS FROZEN INDIAN DESSERT", image: "https://placehold.co/200x200/F97316/FFFFFF?text=Product+2" },
+            { name: "PAIN DE LAIT", description: "GOUT INDIEN AUTHENTIQUE", image: "https://placehold.co/200x200/EAB308/FFFFFF?text=Product+3" },
+            { name: "VEGGIE BURGER", description: "HOME-STYLE FROZEN VEGGIE BURGERS", image: "https://placehold.co/200x200/10B981/FFFFFF?text=Product+4" },
+        ];
+
+        let currentIndex = 0;
+        const track = document.getElementById('carousel-track');
+        const cardWidth = 320; 
+        
+        /**
+         * دالة لإنشاء بطاقة المنتج
+         */
+        function createProductCard(product, index) {
+            const card = document.createElement('div');
+            card.className = 'product-card flex-shrink-0';
+            card.dataset.index = index;
+
+            // 1. الخلفية الدوارة
+            const haloContainer = document.createElement('div');
+            haloContainer.className = 'halo-container';
+            const halo = document.createElement('div');
+            halo.className = 'halo';
+            haloContainer.appendChild(halo);
+            card.appendChild(haloContainer);
+
+            // 2. صورة المنتج
+            const image = document.createElement('img');
+            image.src = product.image;
+            image.alt = product.name;
+            image.className = 'product-image object-cover rounded-xl mb-4';
+            card.appendChild(image);
+
+            // 3. اسم المنتج والوصف
+            const name = document.createElement('h2');
+            name.className = 'text-2xl font-bold text-gray-800 text-center mb-2';
+            name.textContent = product.name;
+            card.appendChild(name);
+
+            const description = document.createElement('p');
+            description.className = 'text-sm text-gray-500 text-center px-4';
+            description.textContent = product.description;
+            card.appendChild(description);
+
+            // 4. أزرار التقليب (موضوعة داخل البطاقة)
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'nav-button button-left';
+            prevBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6 transform rotate-180"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>';
+            // *** الإصلاح هنا: ربط الزر بالدالة ***
+            prevBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                prevProduct();
+            });
+            card.appendChild(prevBtn);
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'nav-button button-right';
+            nextBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>';
+            // *** الإصلاح هنا: ربط الزر بالدالة ***
+            nextBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                nextProduct();
+            });
+            card.appendChild(nextBtn);
+
+            return card;
+        }
+
+        /**
+         * دالة لتحديث حالة العرض (التحريك، التكبير، الهالة)
+         */
+        function updateCarousel() {
+            // 1. حساب قيمة التحريك 
+            const offset = currentIndex * cardWidth; 
+            track.style.transform = `translateX(-${offset}px)`;
+
+            // 2. تحديث فئات النشاط (Active Class)
+            const cards = track.querySelectorAll('.product-card');
+            cards.forEach((card, index) => {
+                card.classList.remove('active');
+                if (index === currentIndex) {
+                    card.classList.add('active'); // تطبيق التكبير وتفعيل الدوران
+                }
+            });
+
+            // 3. التحكم في ظهور الأزرار
+            cards.forEach((card, index) => {
+                const prevButton = card.querySelector('.button-left');
+                const nextButton = card.querySelector('.button-right');
+
+                if (index === currentIndex) {
+                    // إخفاء زر الرجوع عند العنصر الأول
+                    if (prevButton) prevButton.style.opacity = currentIndex === 0 ? '0.3' : '1';
+                    // إخفاء زر التقدم عند العنصر الأخير
+                    if (nextButton) nextButton.style.opacity = currentIndex === products.length - 1 ? '0.3' : '1';
+                }
+            });
+
+            // 4. تحديث النقط الدالة على عدد المنتجات
+            updateDots();
+        }
+
+        /**
+         * دالة للتحرك للأمام (المنتج التالي)
+         */
+        function nextProduct() {
+            if (currentIndex < products.length - 1) {
+                currentIndex++;
+                updateCarousel();
+            }
+        }
+
+        /**
+         * دالة للتحرك للخلف (المنتج السابق)
+         */
+        function prevProduct() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCarousel();
+            }
+        }
+
+        // إنشاء وتحديث النقط
+        const mainArea = document.querySelector('.main-carousel-area');
+        const dotsContainer = document.createElement('div');
+        dotsContainer.className = 'dots-container';
+        mainArea.appendChild(dotsContainer);
+
+        function updateDots() {
+            dotsContainer.innerHTML = '';
+            products.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = `dot ${index === currentIndex ? 'active' : ''}`;
+                dot.addEventListener('click', () => {
+                    currentIndex = index;
+                    updateCarousel();
+                });
+                dotsContainer.appendChild(dot);
+            });
+        }
+
+        // العرض الأولي
+        function initializeCarousel() {
+            products.forEach((product, index) => {
+                const card = createProductCard(product, index);
+                track.appendChild(card);
+            });
+            updateCarousel();
+        }
+
+        initializeCarousel();
+    </script>
+
+</body>
+</html>
+```eof
+
+**ماذا فعلت لإصلاح المشكلة؟**
+
+قمت بمراجعة دالة `createProductCard` وتأكدت من أن أزرار `prevBtn` و `nextBtn` يتم ربطها مباشرة بدالتي `prevProduct()` و `nextProduct()` داخل JavaScript.
+
+**الرجاء الآن الضغط على `Preview`:**
+
+* يجب أن تجد الأسهم الآن **في مكانها الصحيح** (أسفل المنتج النشط).
+* يجب أن تعمل الأزرار الآن وتقلب المنتجات بسلاسة مع حركة المربع والدوران البرتقالي.
